@@ -16,23 +16,36 @@ public class JiraAPI {
     private final String BASE_URL = "https://issues.jenkins.io/rest/api/latest/";
     private int startAt = 0;
 
-    // maxResults is limited to 50 for optimal performance
+    //50 is default value to optimize performance
     private final int maxResults = 50;
-    private String JENKINS_CORE_ISSUES_ENDPOINT = "search?jql=component%3Dcore%20AND%20project%3DJENKINS&startAt=" + startAt + "&maxResults=" + maxResults;
+    private String JENKINS_CORE_ISSUES_ENDPOINT = "search?jql=component%3Dcore%20AND%20project%3DJENKINS&startAt="
+            + startAt + "&maxResults=" + maxResults;
 
+    public int getMaxResults(){
+        return maxResults;
+    }
     public JSONArray getResponseInJSONArray(int startAt) throws IOException {
         this.startAt = startAt;
-        JENKINS_CORE_ISSUES_ENDPOINT = "search?jql=component%3Dcore%20AND%20project%3DJENKINS&startAt=" + startAt + "&maxResults=" + maxResults;
-
-        HttpClient client = HttpClientBuilder.create().build();
-        HttpGet request = new HttpGet(BASE_URL + JENKINS_CORE_ISSUES_ENDPOINT);
-        HttpResponse response = client.execute(request);
-        BufferedReader rd = new BufferedReader(new InputStreamReader(response.getEntity().getContent()));
-        JSONObject obj = new JSONObject(rd.readLine());
+        JENKINS_CORE_ISSUES_ENDPOINT = "search?jql=component%3Dcore%20AND%20project%3DJENKINS&startAt="
+                + startAt + "&maxResults=" + maxResults;
+        JSONObject obj = executeRequest();
         if (obj.getJSONArray("issues").isEmpty()){
             return null;
         }
         return obj.getJSONArray("issues");
+    }
+
+    public JSONObject executeRequest() throws IOException {
+        HttpClient client = HttpClientBuilder.create().build();
+        HttpGet request = new HttpGet(BASE_URL + JENKINS_CORE_ISSUES_ENDPOINT);
+        HttpResponse response = client.execute(request);
+        BufferedReader rd = new BufferedReader(new InputStreamReader(response.getEntity().getContent()));
+        return new JSONObject(rd.readLine());
+    }
+    public int getTotalIssueNumber() throws IOException {
+        JENKINS_CORE_ISSUES_ENDPOINT = "search?jql=component%3Dcore%20AND%20project%3DJENKINS&startAt="
+                + startAt + "&maxResults=" + 1;
+        return executeRequest().getInt("total");
     }
 
     public ArrayList<Issue> getIssueList(JSONArray responseIssues) {

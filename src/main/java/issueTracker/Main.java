@@ -1,46 +1,33 @@
 package issueTracker;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.json.JSONArray;
 
-import java.util.Iterator;
+import java.util.ArrayList;
 
 public class Main {
 
     public static void main(String[] args) throws Exception {
         JiraAPI api = new JiraAPI();
 
-        //TODO: Make loop to get all issues
-        // {
-        //      JSONArray responseIssues = api.getResponseInJSONArray(0);
-        //      if (responseIssues == null) {
-        //          System.out.println("No issues found");
-        //      }
-        // }
-
-
-
-
-
-        /*
-        ObjectMapper mapper = new ObjectMapper();
-        JsonNode root = mapper.readTree(responseIssues.toString());
-        //System.out.println(root.toString());
-        JsonNode fieldsNode = root.path("fields");
-        System.out.println(root.toPrettyString());
-        Iterator<String> fieldNames = fieldsNode.fieldNames();
-
-        while (fieldNames.hasNext()) {
-            String fieldName = fieldNames.next();
-            //System.out.println(fieldName);
+        JSONArray responseIssues = api.getResponseInJSONArray(0);
+        ArrayList<Issue> issues = new ArrayList<>();
+        int totalIssues = api.getTotalIssueNumber();
+        System.out.println(totalIssues);
+        int i = 0;
+        while (responseIssues != null) {
+            issues.addAll(api.getIssueList(responseIssues));
+            i += api.getMaxResults();
+            printStatusBar(i, totalIssues);
+            responseIssues = api.getResponseInJSONArray(i);
         }
-
-
-
-        Issue[] issues = new Issue[50];
-        api.getIssueList(responseIssues);
-
-        */
+    }
+    public static void printStatusBar(int current, int total) {
+        final int BAR_WIDTH = 20;
+        int percentComplete = (int) Math.round((double) current / total * 100);
+        int numChars = (int) Math.round((double) current / total * BAR_WIDTH);
+        // Clear the console
+        System.out.print("\033[H\033[2J");
+        String progressBar = "[" + "=".repeat(numChars) + " ".repeat(BAR_WIDTH - numChars) + "]";
+        System.out.printf("Progress: %d%% %s%n", percentComplete, progressBar);
     }
 }
