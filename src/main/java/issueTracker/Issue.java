@@ -3,13 +3,19 @@ package issueTracker;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 public class Issue {
-    private String project, tracker, status, priority, subject, description, author, assignee, environment;
+    private String project, tracker, status, priority,
+            subject, description, author, assignee,
+            environment, key;
     private Date createdDate;
     private ArrayList<String> inwardIssues = new ArrayList<>();
     private ArrayList<String> outwardIssues = new ArrayList<>();
@@ -28,61 +34,54 @@ public class Issue {
         setEnvironment();
         setCreatedDate();
         setRelatedIssues();
+        setKey(obj);
     }
-
     private void setProject() {
         this.project = fields.getJSONObject(IssueFields.PROJECT).
                 getString("name");
     }
-
     private void setTracker() {
         this.tracker = fields.getJSONObject(IssueFields.ISSUE_TYPE).
                 getString("name");
     }
-
     private void setStatus() {
         this.status = fields.getJSONObject(IssueFields.STATUS).
                 getString("name");
     }
-
     private void setPriority() {
         this.priority = fields.getJSONObject(IssueFields.PRIORITY).
                 getString("name");
     }
-
     private void setSubject() {
         this.subject = fields.getString(IssueFields.SUMMARY);
     }
-
     private void setDescription() {
         this.description = fields.optString(IssueFields.DESCRIPTION);
     }
-
     private void setAuthor() {
         this.author = fields.getJSONObject(IssueFields.CREATOR).
                 getString("name");
     }
-
     private void setAssignee() {
         this.assignee = this.assignee = fields.optJSONObject(IssueFields.ASSIGNEE) != null ?
                 fields.getJSONObject(IssueFields.ASSIGNEE).getString("name") : "";
     }
-
     private void setEnvironment() {
         this.environment = fields.optString(IssueFields.ENVIRONMENT);
     }
-
+    private void setKey(JSONObject original){
+        this.key = original.getString("key");
+    }
     private void setCreatedDate() {
         String createdDateStr = fields.getString(IssueFields.CREATED);
         try {
-            this.createdDate = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ")
+            this.createdDate = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss")
                     .parse(createdDateStr);
         } catch (ParseException e) {
             System.err.println("Error parsing date: " + createdDateStr);
             this.createdDate = null;
         }
     }
-
     private void setRelatedIssues() {
         JSONArray related = fields.optJSONArray(IssueFields.ISSUE_LINKS) != null ?
                 fields.getJSONArray(IssueFields.ISSUE_LINKS) : null;
@@ -101,5 +100,29 @@ public class Issue {
                 if (outward != null) outwardIssues.add(outward);
             }
         }
+    }
+    public String getFieldValues(){
+        StringBuilder builder = new StringBuilder();
+        builder.append(project).append(",")
+                .append(key).append(",")
+                .append(tracker).append(",")
+                .append(status).append(",")
+                .append(priority).append(",")
+                .append(escapeForCSV(subject)).append(",")
+                .append(escapeForCSV(description)).append(",")
+                .append(author).append(",")
+                .append(assignee).append(",")
+                .append(environment).append(",")
+                .append(createdDate).append(",")
+                .append(escapeForCSV(String.join("|", inwardIssues))).append(",")
+                .append(escapeForCSV(String.join("|", outwardIssues))).append("\n");
+        return builder.toString();
+    }
+
+    private String escapeForCSV(String value) {
+        if (value == null) {
+            return null;
+        }
+        return value.replaceAll("\"", "\"\"");
     }
 }

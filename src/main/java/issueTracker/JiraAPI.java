@@ -17,7 +17,7 @@ public class JiraAPI {
     private int startAt = 0;
 
     //50 is default value to optimize performance
-    private final int maxResults = 50;
+    private final int maxResults = 5;
     private String JENKINS_CORE_ISSUES_ENDPOINT = "search?jql=component%3Dcore%20AND%20project%3DJENKINS&startAt="
             + startAt + "&maxResults=" + maxResults;
 
