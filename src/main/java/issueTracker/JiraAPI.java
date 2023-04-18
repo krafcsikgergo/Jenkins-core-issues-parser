@@ -17,12 +17,16 @@ public class JiraAPI {
     private int startAt = 0;
 
     //50 is default value to optimize performance
-    private final int maxResults = 5;
+    private int maxResults = 1000;
     private String JENKINS_CORE_ISSUES_ENDPOINT = "search?jql=component%3Dcore%20AND%20project%3DJENKINS&startAt="
-            + startAt + "&maxResults=" + maxResults;
+            + startAt + "&maxResults=" + maxResults + "&fields=project,tracker,status,priority,subject,description" +
+            ",author,assignee,environment,key,createdDate,issuelinks";
 
     public int getMaxResults(){
         return maxResults;
+    }
+    public void setMaxResults(int number){
+        maxResults = number;
     }
     public JSONArray getResponseInJSONArray(int startAt) throws IOException {
         this.startAt = startAt;

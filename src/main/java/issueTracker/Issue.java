@@ -2,15 +2,10 @@ package issueTracker;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
-
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 
 public class Issue {
     private String project, tracker, status, priority,
@@ -59,8 +54,8 @@ public class Issue {
         this.description = fields.optString(IssueFields.DESCRIPTION);
     }
     private void setAuthor() {
-        this.author = fields.getJSONObject(IssueFields.CREATOR).
-                getString("name");
+        this.author = fields.optJSONObject(IssueFields.CREATOR) != null ?
+                fields.getJSONObject(IssueFields.CREATOR).getString("name") : null;
     }
     private void setAssignee() {
         this.assignee = this.assignee = fields.optJSONObject(IssueFields.ASSIGNEE) != null ?
@@ -103,19 +98,19 @@ public class Issue {
     }
     public String getFieldValues(){
         StringBuilder builder = new StringBuilder();
-        builder.append(project).append(",")
-                .append(key).append(",")
-                .append(tracker).append(",")
-                .append(status).append(",")
-                .append(priority).append(",")
+        builder.append(escapeForCSV(project)).append(",")
+                .append(escapeForCSV(key)).append(",")
+                .append(escapeForCSV(tracker)).append(",")
+                .append(escapeForCSV(status)).append(",")
+                .append(escapeForCSV(priority)).append(",")
                 .append(escapeForCSV(subject)).append(",")
                 .append(escapeForCSV(description)).append(",")
-                .append(author).append(",")
-                .append(assignee).append(",")
-                .append(environment).append(",")
+                .append(escapeForCSV(author)).append(",")
+                .append(escapeForCSV(assignee)).append(",")
+                .append(escapeForCSV(environment)).append(",")
                 .append(createdDate).append(",")
                 .append(escapeForCSV(String.join("|", inwardIssues))).append(",")
-                .append(escapeForCSV(String.join("|", outwardIssues))).append("\n");
+                .append(escapeForCSV(String.join("|", outwardIssues))).append(System.lineSeparator());
         return builder.toString();
     }
 
@@ -123,6 +118,6 @@ public class Issue {
         if (value == null) {
             return null;
         }
-        return value.replaceAll("\"", "\"\"");
+        return value.replace("\r\n", "\u2028").replace("\r\n\r\n", "\u2028").replace("\n", "\\n");
     }
 }
